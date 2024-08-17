@@ -17,4 +17,11 @@ docker-compose -f docker-compose.yml -f docker-compose.debug.yml up --build
 To build and run the containers in release mode, use:
 
 ```sh
-docker-compose -f docker-compose.yml -f docker-compose.debug.yml up --build
+docker-compose -f docker-compose.yml -f docker-compose.release.yml up --build
+
+### Run test
+
+Navigate to the solution folder before running the commands.
+
+```sh
+.\integration-test.ps1
