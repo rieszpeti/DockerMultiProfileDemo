@@ -4,3 +4,6 @@ services:
   dockermultiprofiledemo:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+    build:
+      args:
+        BUILD_CONFIGURATION: Debug
