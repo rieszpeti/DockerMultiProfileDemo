@@ -23,7 +23,7 @@ docker run -d --name dockermultiprofiledemo.db.nodocker.dev `
 >   postgres:latest
 ```
 
-### Release
+# Release
 
 To build and run the containers in release mode, use:
 
@@ -31,7 +31,7 @@ To build and run the containers in release mode, use:
 docker-compose -f docker-compose.yml -f docker-compose.release.yml up --build --force-recreate
 ```
 
-# Configuring Local Hostnames on Windows
+## Configuring Local Hostnames on Windows
 
 To configure a local hostname for your application, follow these steps:
 
