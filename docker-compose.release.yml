@@ -17,7 +17,7 @@ services:
       - traefik.http.services.dockermultiprofiledemo.loadbalancer.server.port=8080
 
   dockermultiprofiledemo.db:
-     container_name: dockermultiprofiledemo.db.prod
+     container_name: dockermultiprofiledemo.db.release
      networks:
        - backend
   
