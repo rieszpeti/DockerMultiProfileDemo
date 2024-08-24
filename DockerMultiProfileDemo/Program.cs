@@ -1,5 +1,6 @@
 using DockerMultiProfileDemo.Database;
 using DockerMultiProfileDemo.Extensions;
+using DockerMultiProfileDemo.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,7 @@ if (Environment.GetEnvironmentVariable("ISDOCKERENV") == "true")
 
 var connectionString = builder.Configuration.GetConnectionString(connectionStringKey);
 builder.Services.AddNpgsql<AppDbContext>(connectionString);
+builder.Services.AddScoped<DbService>();
 
 var app = builder.Build();
 
@@ -52,9 +54,9 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
-app.MapGet("/unittest", async (AppDbContext dbContext) =>
+app.MapGet("/unittest", async (DbService service) =>
 {
-    return await dbContext.SomeEntityModels.FirstOrDefaultAsync();
+    return await service.ReturnFirst();
 })
 .WithName("UnitTest")
 .WithOpenApi();
