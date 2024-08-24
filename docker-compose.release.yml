@@ -11,7 +11,7 @@ services:
       - backend
     labels:
       - traefik.enable=true
-      - traefik.http.routers.dockermultiprofiledemo.rule=Host(`myapp.local`)
+      - traefik.http.routers.dockermultiprofiledemo.rule=Host(`${DOMAIN_APP}`)
       - traefik.http.services.dockermultiprofiledemo.loadbalancer.server.port=8080
 
   dockermultiprofiledemo.db:
@@ -33,7 +33,6 @@ services:
       - --entrypoints.web.address=:80
     labels:
       - traefik.enable=true
-      - traefik.http.routers.mydashboard.rule=Host(`myapp.local`)
 
 networks:
   proxy:
@@ -42,7 +41,7 @@ networks:
     name: backend
 
 volumes:
-  letsencrypt:
-    name: letsencrypt
+  # letsencrypt:
+  #   name: letsencrypt
   database_data:
     name: database_data

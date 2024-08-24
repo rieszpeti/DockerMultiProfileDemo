@@ -17,8 +17,8 @@ services:
   dockermultiprofiledemo.db:
     image: postgres:latest
     environment:
-      - POSTGRES_DB=dockermultiprofiledemo
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - ./.containers/dockermultiprofiledemo-db:/var/lib/postgresql/data
