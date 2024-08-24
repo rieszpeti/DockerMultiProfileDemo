@@ -1,3 +1,7 @@
+using DockerMultiProfileDemo.Database;
+using DockerMultiProfileDemo.Extensions;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,7 +9,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var connectionStringKey = "Default";
+
+if (Environment.GetEnvironmentVariable("ISDOCKERENV") == "true")
+{
+    connectionStringKey = "Docker";
+}
+
+var connectionString = builder.Configuration.GetConnectionString(connectionStringKey);
+builder.Services.AddNpgsql<AppDbContext>(connectionString);
+
 var app = builder.Build();
+
+app.ApplyMigrations();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -14,7 +30,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 var summaries = new[]
 {
@@ -36,6 +52,13 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
+app.MapGet("/unittest", async (AppDbContext dbContext) =>
+{
+    return await dbContext.SomeEntityModels.FirstOrDefaultAsync();
+})
+.WithName("UnitTest")
+.WithOpenApi();
+
 app.Run();
 
 internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
@@ -43,6 +66,5 @@ internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
 
-
 // Make the implicit Program class public so test projects can access it
-public partial class Program { }
+public partial class Program;

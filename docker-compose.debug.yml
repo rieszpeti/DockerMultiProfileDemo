@@ -1,9 +1,13 @@
-version: '3.4'
-
 services:
-  dockermultiprofiledemo:
+  dockermultiprofiledemo.api:
+    container_name: dockermultiprofiledemo.api.dev
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
     build:
       args:
         BUILD_CONFIGURATION: Debug
+
+  dockermultiprofiledemo.db:
+    container_name: dockermultiprofiledemo.db.dev
+    ports:
+      - 5432:5432  

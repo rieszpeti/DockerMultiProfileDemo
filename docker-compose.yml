@@ -1,17 +1,26 @@
 version: '3.4'
 
 services:
-  dockermultiprofiledemo:
-    image: ${DOCKER_REGISTRY-}dockermultiprofiledemo
+  dockermultiprofiledemo.api:
+    image: ${DOCKER_REGISTRY-}dockermultiprofiledemo.api
     build:
       context: .
       dockerfile: DockerMultiProfileDemo/Dockerfile
     environment:
       - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
-    ports:
-      - "8080:8080"
-      - "8081:8081"
+      #- ASPNETCORE_HTTPS_PORTS=8081
+      - ISDOCKERENV=true
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      #- ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+    depends_on:
+      - dockermultiprofiledemo.db
+
+  dockermultiprofiledemo.db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=dockermultiprofiledemo
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./.containers/dockermultiprofiledemo-db:/var/lib/postgresql/data
