@@ -11,7 +11,7 @@ services:
       - backend
     labels:
       - traefik.enable=true
-      - traefik.http.routers.dockermultiprofiledemo.rule=Host(`${DOMAIN_APP}`)
+      - traefik.http.routers.dockermultiprofiledemo.rule=Host(`${DOMAIN_NAME}`)
       - traefik.http.services.dockermultiprofiledemo.loadbalancer.server.port=8080
 
   dockermultiprofiledemo.db:
