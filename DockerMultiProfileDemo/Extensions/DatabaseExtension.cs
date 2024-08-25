@@ -14,6 +14,7 @@ namespace DockerMultiProfileDemo.Extensions
             if (Environment.GetEnvironmentVariable("ISDOCKERENV") == "true")
             {
                 dbConnectionStringKey = "DockerDb";
+                cacheConnectionStringKey = "DockerCache";
             }
 
             var connectionString = builder.Configuration.GetConnectionString(dbConnectionStringKey);

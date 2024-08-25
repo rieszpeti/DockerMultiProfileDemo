@@ -16,11 +16,17 @@ To use it without docker but with docker image then use this command:
 
 ```sh
 docker run -d --name dockermultiprofiledemo.db.nodocker.dev `
->   -e POSTGRES_DB=dockermultiprofiledemo `
->   -e POSTGRES_USER=postgres `
->   -e POSTGRES_PASSWORD=postgres `
->   -p 5432:5432 `
->   postgres:latest
+   -e POSTGRES_DB=dockermultiprofiledemo `
+   -e POSTGRES_USER=postgres `
+   -e POSTGRES_PASSWORD=postgres `
+   -p 5432:5432 `
+   postgres:latest
+```
+
+```sh
+docker run -d --name dockermultiprofiledemo.cache.nodocker.dev `
+   -p 6379:6379 `
+   redis:latest
 ```
 
 ### Release
