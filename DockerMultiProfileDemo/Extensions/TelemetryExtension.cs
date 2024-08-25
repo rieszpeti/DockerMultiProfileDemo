@@ -4,10 +4,11 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using OpenTelemetry.Resources;
 
 namespace DockerMultiProfileDemo.Extensions
 {
-    public static class StartupExtension
+    public static class TelemetryExtension
     {
         public static void SetupOpenTelemetry(this WebApplicationBuilder builder)
         {
@@ -20,6 +21,7 @@ namespace DockerMultiProfileDemo.Extensions
             });
 
             builder.Services.AddOpenTelemetry()
+                .ConfigureResource(resource => resource.AddService("dockermultiprofiledemo.api"))
                 .WithMetrics(x =>
                 {
                     x.AddAspNetCoreInstrumentation()

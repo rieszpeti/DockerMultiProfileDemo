@@ -1,7 +1,6 @@
 using DockerMultiProfileDemo.Database;
 using DockerMultiProfileDemo.Extensions;
 using DockerMultiProfileDemo.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,21 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.SetupOpenTelemetry();
-
-var dbConnectionStringKey = "DefaultDb";
-var cacheConnectionStringKey = "DefaultCache";
-
-if (Environment.GetEnvironmentVariable("ISDOCKERENV") == "true")
+if (builder.Environment.IsEnvironment("Release"))
 {
-    dbConnectionStringKey = "DockerDb";
+    builder.SetupOpenTelemetry();
 }
 
-var connectionString = builder.Configuration.GetConnectionString(dbConnectionStringKey);
-builder.Services.AddNpgsql<AppDbContext>(connectionString);
-builder.Services.AddStackExchangeRedisCache(options =>
-               options.Configuration = builder.Configuration.GetConnectionString(cacheConnectionStringKey));
-builder.Services.AddScoped<DbService>();
+builder.SetupDatabase();
 
 var app = builder.Build();
 
@@ -122,6 +112,3 @@ internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
-
-// Make the implicit Program class public so test projects can access it
-public partial class Program;

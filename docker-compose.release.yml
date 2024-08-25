@@ -68,3 +68,4 @@ networks:
 volumes:
   database_data:
     name: database_data
+  
