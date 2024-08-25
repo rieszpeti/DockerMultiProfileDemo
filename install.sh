@@ -66,4 +66,17 @@ for entry in "${hostsEntries[@]}"; do
 done
 
 # Run the Docker command
-docker-compose -f docker-compose.yml -f docker-compose.release.yml up --build --force-recreate
+docker-compose -f docker-compose.yml -f docker-compose.release.yml up --build --force-recreate -d
+
+# Run .NET tests
+echo "Running .NET tests..."
+dotnet test ./Integrationtest/IntegrationTest.csproj
+
+# Check the exit status of dotnet test
+if [[ $? -eq 0 ]]; then
+    echo "Tests passed successfully."
+    echo "Enjoy the app."
+else
+    echo "Tests failed."
+    exit 1
+fi

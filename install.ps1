@@ -61,4 +61,18 @@ foreach ($entry in $hostsEntries) {
 }
 
 # Run the Docker command
-docker-compose -f docker-compose.yml -f docker-compose.release.yml up --build --force-recreate
+docker-compose -f docker-compose.yml -f docker-compose.release.yml up --build --force-recreate -d
+
+dotnet test ./Integrationtest/IntegrationTest.csproj
+
+# Run .NET tests
+Write-Host "Running .NET tests..."
+$testResult = dotnet test ./Integrationtest/IntegrationTest.csproj
+
+# Check the exit status of dotnet test
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "Tests passed successfully."
+} else {
+    Write-Host "Tests failed."
+    Exit 1
+}
