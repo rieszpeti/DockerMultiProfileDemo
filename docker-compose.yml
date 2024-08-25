@@ -11,6 +11,7 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
     depends_on:
       - dockermultiprofiledemo.db
+      - dockermultiprofiledemo.cache
 
   dockermultiprofiledemo.db:
     image: postgres:latest
@@ -20,3 +21,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - ./.containers/dockermultiprofiledemo-db:/var/lib/postgresql/data
+
+  dockermultiprofiledemo.cache:
+    image: redis:latest
+    container_name: dockermultiprofiledemo.cache
+    restart: always

@@ -6,8 +6,14 @@ services:
     build:
       args:
         BUILD_CONFIGURATION: Debug
+    ports:
+      - "8080:8080"
 
   dockermultiprofiledemo.db:
     container_name: dockermultiprofiledemo.db.dev
     ports:
-      - 5432:5432  
+      - 5432:5432 
+  
+  dockermultiprofiledemo.cache:
+    ports:
+      - '6379:6379'

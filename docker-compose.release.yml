@@ -19,6 +19,10 @@ services:
      networks:
        - backend
   
+  dockermultiprofiledemo.cache:
+    networks:
+       - backend
+  
   traefik:
     container_name: traefik
     image: traefik:v3.1.2

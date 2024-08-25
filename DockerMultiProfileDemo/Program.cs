@@ -2,6 +2,7 @@ using DockerMultiProfileDemo.Database;
 using DockerMultiProfileDemo.Extensions;
 using DockerMultiProfileDemo.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,15 +11,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var connectionStringKey = "Default";
+var dbConnectionStringKey = "DefaultDb";
+var cacheConnectionStringKey = "DefaultCache";
 
 if (Environment.GetEnvironmentVariable("ISDOCKERENV") == "true")
 {
-    connectionStringKey = "Docker";
+    dbConnectionStringKey = "DockerDb";
 }
 
-var connectionString = builder.Configuration.GetConnectionString(connectionStringKey);
+var connectionString = builder.Configuration.GetConnectionString(dbConnectionStringKey);
 builder.Services.AddNpgsql<AppDbContext>(connectionString);
+builder.Services.AddStackExchangeRedisCache(options =>
+               options.Configuration = builder.Configuration.GetConnectionString(cacheConnectionStringKey));
 builder.Services.AddScoped<DbService>();
 
 var app = builder.Build();
@@ -39,8 +43,16 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/weatherforecast", async (IDistributedCache cache) =>
 {
+    var cacheKey = "weatherForecast";
+    var cachedForecast = await cache.GetStringAsync(cacheKey);
+
+    if (cachedForecast != null)
+    {
+        return System.Text.Json.JsonSerializer.Deserialize<WeatherForecast[]>(cachedForecast);
+    }
+
     var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
@@ -49,14 +61,46 @@ app.MapGet("/weatherforecast", () =>
             summaries[Random.Shared.Next(summaries.Length)]
         ))
         .ToArray();
+
+    var serializedForecast = System.Text.Json.JsonSerializer.Serialize(forecast);
+    await cache.SetStringAsync(cacheKey, serializedForecast, new DistributedCacheEntryOptions
+    {
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+    });
+
     return forecast;
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
-app.MapGet("/unittest", async (DbService service) =>
+
+app.MapGet("/unittest", async (DbService service, IDistributedCache cache) =>
 {
-    return await service.ReturnFirst();
+    var cacheKey = "unitTestResult";
+
+    // Try to get the cached result
+    var cachedResult = await cache.GetStringAsync(cacheKey);
+
+    if (cachedResult != null)
+    {
+        // Deserialize the cached JSON string back to the entity model
+        var cachedEntity = System.Text.Json.JsonSerializer.Deserialize<SomeEntityModel>(cachedResult);
+        return Results.Ok(cachedEntity);
+    }
+
+    // Get the result from the service
+    var result = await service.ReturnFirst();
+
+    // Serialize the result to a JSON string
+    var serializedResult = System.Text.Json.JsonSerializer.Serialize(result);
+
+    // Store the serialized result in the cache
+    await cache.SetStringAsync(cacheKey, serializedResult, new DistributedCacheEntryOptions
+    {
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+    });
+
+    return Results.Ok(result);
 })
 .WithName("UnitTest")
 .WithOpenApi();
