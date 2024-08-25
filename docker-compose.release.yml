@@ -3,12 +3,15 @@ services:
     container_name: dockermultiprofiledemo.api.prod
     environment:
       - ASPNETCORE_ENVIRONMENT=Release
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://dockermultiprofiledemo.dashboard:18889
+      - OTPLKEY=${OTPLKEY}
     build:
       args:
         - BUILD_CONFIGURATION=Release
     networks:
       - proxy
       - backend
+      - otel
     labels:
       - traefik.enable=true
       - traefik.http.routers.dockermultiprofiledemo.rule=Host(`${DOMAIN_NAME}`)
@@ -38,14 +41,30 @@ services:
     labels:
       - traefik.enable=true
 
+  dockermultiprofiledemo.dashboard:
+    image: mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest
+    container_name: dashboard
+    environment:
+      - DASHBOARD__OTLP__AUTHMODE=ApiKey
+      - DASHBOARD__OTLP__PRIMARYAPIKEY=${OTPLKEY}
+      - DASHBOARD__FRONTEND__AUTHMODE=BrowserToken
+      - DASHBOARD__FRONTEND__BROWSERTOKEN=${ASPIRE_BROWSER_TOKEN}
+    networks:
+     - otel
+     - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dashboard.rule=Host(`dashboard.${DOMAIN_NAME}`)
+      - traefik.http.services.dashboard.loadbalancer.server.port=18888
+
 networks:
   proxy:
     name: proxy
   backend:
     name: backend
+  otel:
+    name: otel
 
 volumes:
-  # letsencrypt:
-  #   name: letsencrypt
   database_data:
     name: database_data

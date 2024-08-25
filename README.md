@@ -45,9 +45,10 @@ To configure a local hostname for your application, follow these steps:
    - Select `All Files (*.*)` in the file type dropdown.
    - Open the file named `hosts`.
 
-3. **Add the following line**:
+3. **Add the following lines**:
    ```plaintext
    127.0.0.1 myapp.local
+   127.0.0.1 dashboard.myapp.local
    ```
 
 ### Run test

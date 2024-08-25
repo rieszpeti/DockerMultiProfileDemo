@@ -11,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.SetupOpenTelemetry();
+
 var dbConnectionStringKey = "DefaultDb";
 var cacheConnectionStringKey = "DefaultCache";
 
@@ -43,15 +45,18 @@ var summaries = new[]
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-app.MapGet("/weatherforecast", async (IDistributedCache cache) =>
+app.MapGet("/weatherforecast", async (IDistributedCache cache, ILogger<Program> logger) =>
 {
     var cacheKey = "weatherForecast";
     var cachedForecast = await cache.GetStringAsync(cacheKey);
 
     if (cachedForecast != null)
     {
+        logger.LogInformation("Cache hit for key '{CacheKey}'.", cacheKey);
         return System.Text.Json.JsonSerializer.Deserialize<WeatherForecast[]>(cachedForecast);
     }
+
+    logger.LogInformation("Cache miss for key '{CacheKey}'. Fetching data from source.", cacheKey);
 
     var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
@@ -68,13 +73,15 @@ app.MapGet("/weatherforecast", async (IDistributedCache cache) =>
         AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
     });
 
+    logger.LogInformation("Data fetched and cached with key '{CacheKey}'.", cacheKey);
+
     return forecast;
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
 
-app.MapGet("/unittest", async (DbService service, IDistributedCache cache) =>
+app.MapGet("/unittest", async (DbService service, IDistributedCache cache, ILogger<Program> logger) =>
 {
     var cacheKey = "unitTestResult";
 
@@ -88,6 +95,8 @@ app.MapGet("/unittest", async (DbService service, IDistributedCache cache) =>
         return Results.Ok(cachedEntity);
     }
 
+    logger.LogInformation("Cache hit for key '{CacheKey}'.", cacheKey);
+
     // Get the result from the service
     var result = await service.ReturnFirst();
 
@@ -99,6 +108,8 @@ app.MapGet("/unittest", async (DbService service, IDistributedCache cache) =>
     {
         AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
     });
+
+    logger.LogInformation("Data fetched from service and cached with key '{CacheKey}'.", cacheKey);
 
     return Results.Ok(result);
 })
