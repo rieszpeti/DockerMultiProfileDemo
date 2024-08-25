@@ -25,4 +25,3 @@ services:
   dockermultiprofiledemo.cache:
     image: redis:latest
     container_name: dockermultiprofiledemo.cache
-    restart: always

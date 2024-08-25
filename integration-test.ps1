@@ -5,4 +5,4 @@ docker-compose -f docker-compose.yml -f docker-compose.release.yml up --build -d
 dotnet test ./Integrationtest/IntegrationTest.csproj
 
 # Stop and remove the containers.
-docker-compose down
+docker-compose -f docker-compose.yml -f docker-compose.release.yml down --volumes --remove-orphans
