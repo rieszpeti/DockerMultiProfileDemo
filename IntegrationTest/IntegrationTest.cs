@@ -13,15 +13,15 @@ public class IntegrationTests
 
     public IntegrationTests()
     {
-        DotEnv.Load(".env");
+        var envVars = DotEnv.Load(".env");
 
-        var baseAddress = Environment.GetEnvironmentVariable("DOMAIN_NAME")
+        var baseAddress = envVars.GetValueOrDefault("DOMAIN_NAME")
                            ?? throw new ArgumentNullException("DOMAIN_NAME environment variable is not set.");
 
-        var csharpPrefix = Environment.GetEnvironmentVariable("DOMAIN_CSHARP_PREFIX")
+        var csharpPrefix = envVars.GetValueOrDefault("DOMAIN_CSHARP_PREFIX")
                            ?? throw new ArgumentNullException("DOMAIN_CSHARP_PREFIX environment variable is not set.");
 
-        var pythonPrefix = Environment.GetEnvironmentVariable("DOMAIN_PYTHON_PREFIX")
+        var pythonPrefix = envVars.GetValueOrDefault("DOMAIN_PYTHON_PREFIX")
                            ?? throw new ArgumentNullException("DOMAIN_PYTHON_PREFIX environment variable is not set.");
 
         _csharpAddress = $"http://{csharpPrefix}.{baseAddress}";

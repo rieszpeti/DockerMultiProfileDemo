@@ -1,5 +1,5 @@
 # Check if the script is running with administrator privileges
-If (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Host "Please run the script as an administrator!"
     Exit 1
 }
@@ -21,7 +21,13 @@ function Load-Dotenv {
     if (Test-Path $path) {
         Get-Content $path | ForEach-Object {
             if ($_ -match '^\s*([^#\s][^\s=]*)\s*=\s*(.*)\s*$') {
-                $envVariables[$matches[1]] = $matches[2]
+                $key = $matches[1]
+                $value = $matches[2]
+
+                # Filter and store only variables starting with "DOMAIN_"
+                if ($key -match '^DOMAIN_') {
+                    $envVariables[$key] = $value
+                }
             }
         }
         return $envVariables
@@ -34,25 +40,24 @@ function Load-Dotenv {
 # Load environment variables from the .env file
 $envVars = Load-Dotenv -path $envFilePath
 
-# Retrieve environment variables
-$baseAddress = $envVars["DOMAIN_NAME"]
-$csharpAddress = $envVars["DOMAIN_CSHARP_PREFIX"] + "." + $baseAddress
-$pythonAddress = $envVars["DOMAIN_PYTHON_PREFIX"] + "." + $baseAddress
-$dashboardAddress = $envVars["DOMAIN_DASHBOARD_PREFIX"] + "." + $baseAddress
-$ipAddress = "127.0.0.1" # Example IP address
-
-# Prepare hosts entries
-$hostsEntries = @(
-    "$ipAddress $csharpAddress"
-    "$ipAddress $pythonAddress"
-    "$ipAddress $dashboardAddress"
-)
-
-$hostsFilePath = "C:\Windows\System32\drivers\etc\hosts"
+# Prepare hosts entries based on loaded environment variables
+$hostsEntries = @()
+foreach ($key in $envVars.Keys) {
+    if ($key -ne "DOMAIN_NAME") {
+        $prefix = $envVars[$key]
+        $baseAddress = $envVars["DOMAIN_NAME"]
+        $hostsEntries += "127.0.0.1 $prefix.$baseAddress"
+    }
+}
 
 # Update hosts file
+$hostsFilePath = "C:\Windows\System32\drivers\etc\hosts"
 foreach ($entry in $hostsEntries) {
-    if (-Not (Select-String -Path $hostsFilePath -Pattern $entry)) {
+    # Escape any regex special characters in the entry
+    $pattern = [regex]::Escape($entry)
+    
+    # Check if entry exists in the hosts file
+    if (-Not (Select-String -Path $hostsFilePath -Pattern $pattern)) {
         Add-Content -Path $hostsFilePath -Value $entry
         Write-Host "Entry added: $entry"
     } else {
@@ -62,8 +67,6 @@ foreach ($entry in $hostsEntries) {
 
 # Run the Docker command
 docker-compose -f docker-compose.yml -f docker-compose.release.yml up --build --force-recreate -d
-
-dotnet test ./Integrationtest/IntegrationTest.csproj
 
 # Run .NET tests
 Write-Host "Running .NET tests..."

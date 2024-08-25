@@ -8,10 +8,14 @@ namespace IntegrationTest
 {
     public static class DotEnv
     {
-        public static void Load(string filePath)
+        public static Dictionary<string, string> Load(string filePath)
         {
             if (!File.Exists(filePath))
-                return;
+            { 
+                throw new FileNotFoundException(filePath);
+            }
+
+            var dict = new Dictionary<string, string>();
 
             foreach (var line in File.ReadAllLines(filePath))
             {
@@ -20,10 +24,19 @@ namespace IntegrationTest
                     StringSplitOptions.RemoveEmptyEntries);
 
                 if (parts.Length != 2)
+                {
                     continue;
+                }
 
-                Environment.SetEnvironmentVariable(parts[0], parts[1]);
+                if (!parts[0].StartsWith("DOMAIN_"))
+                {
+                    continue;
+                }
+
+                dict.Add(parts[0], parts[1]);
             }
+
+            return dict;
         }
     }
 }
