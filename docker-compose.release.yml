@@ -14,7 +14,7 @@ services:
       - otel
     labels:
       - traefik.enable=true
-      - traefik.http.routers.dockermultiprofiledemo.rule=Host(`${DOMAIN_NAME}`)
+      - traefik.http.routers.dockermultiprofiledemo.rule=Host(`${DOMAIN_CSHARP_PREFIX}.${DOMAIN_NAME}`)
       - traefik.http.services.dockermultiprofiledemo.loadbalancer.server.port=8080
 
   dockermultiprofiledemo.db:
@@ -56,6 +56,14 @@ services:
       - traefik.enable=true
       - traefik.http.routers.dashboard.rule=Host(`dashboard.${DOMAIN_NAME}`)
       - traefik.http.services.dashboard.loadbalancer.server.port=18888
+  
+  pythonproject:
+    networks:
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.pythonproject.rule=Host(`${DOMAIN_PYTHON_PREFIX}.${DOMAIN_NAME}`)
+      - traefik.http.services.pythonproject.loadbalancer.server.port=4949
 
 networks:
   proxy:

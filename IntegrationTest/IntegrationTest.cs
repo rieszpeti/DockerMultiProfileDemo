@@ -1,5 +1,6 @@
 using DockerMultiProfileDemo.Database;
-using Microsoft.AspNetCore.Mvc.Testing;
+using Newtonsoft.Json.Linq;
+using System.Net.Http;
 using System.Net.Http.Json;
 
 namespace IntegrationTest;
@@ -7,19 +8,34 @@ namespace IntegrationTest;
 public class IntegrationTests
 {
     private readonly HttpClient _client;
-    private readonly string _baseAddress = "http://myapp.local"; //TODO hardcoded
+    private readonly string _csharpAddress;
+    private readonly string _pythonAddress;
 
     public IntegrationTests()
     {
-        _client = new HttpClient
-        {
-            BaseAddress = new Uri(_baseAddress)
-        };
+        DotEnv.Load(".env");
+
+        var baseAddress = Environment.GetEnvironmentVariable("DOMAIN_NAME")
+                           ?? throw new ArgumentNullException("DOMAIN_NAME environment variable is not set.");
+
+        var csharpPrefix = Environment.GetEnvironmentVariable("DOMAIN_CSHARP_PREFIX")
+                           ?? throw new ArgumentNullException("DOMAIN_CSHARP_PREFIX environment variable is not set.");
+
+        var pythonPrefix = Environment.GetEnvironmentVariable("DOMAIN_PYTHON_PREFIX")
+                           ?? throw new ArgumentNullException("DOMAIN_PYTHON_PREFIX environment variable is not set.");
+
+        _csharpAddress = $"http://{csharpPrefix}.{baseAddress}";
+        _pythonAddress = $"http://{pythonPrefix}.{baseAddress}";
+
+        _client = new HttpClient();
     }
 
     [Fact]
     public async Task GetWeatherForecastReturnsSuccessAndCorrectContentType()
     {
+        // Arrange
+        _client.BaseAddress = new Uri(_csharpAddress);
+
         // Act
         var response = await _client.GetAsync("/WeatherForecast");
 
@@ -31,6 +47,9 @@ public class IntegrationTests
     [Fact]
     public async Task GetUnittest_ReturnsDataFromServiceAndCachesIt()
     {
+        // Arrange
+        _client.BaseAddress = new Uri(_csharpAddress);
+
         // Act: Call the endpoint for the first time (cache is empty initially)
         var response = await _client.GetAsync("/unittest");
         response.EnsureSuccessStatusCode();
@@ -47,5 +66,22 @@ public class IntegrationTests
 
         Assert.NotNull(cachedResult);
         Assert.Equal(firstResult.someProp, cachedResult.someProp);
+    }
+
+    [Fact]
+    public async Task Python_HelloWorld_Endpoint_ReturnsHelloWorld()
+    {
+        // Arrange
+        _client.BaseAddress = new Uri(_pythonAddress);
+
+        // Act
+        var response = await _client.GetAsync("/helloworld");
+
+        // Assert
+        response.EnsureSuccessStatusCode(); // Ensure we got a success status code
+        var responseString = await response.Content.ReadAsStringAsync();
+        var responseObject = JObject.Parse(responseString);
+
+        Assert.Equal("Hello World", responseObject["message"]?.ToString());
     }
 }

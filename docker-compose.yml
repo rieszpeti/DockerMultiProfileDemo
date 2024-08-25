@@ -21,7 +21,21 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - ./.containers/dockermultiprofiledemo-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   dockermultiprofiledemo.cache:
     image: redis:latest
     container_name: dockermultiprofiledemo.cache
+
+  pythonproject:
+    container_name: fastapi
+    build:
+      context: .
+      dockerfile: PythonProject/Dockerfile
+    depends_on:
+      - dockermultiprofiledemo.api
+     
